@@ -62,5 +62,10 @@
 	},
 	"keywords": [
 		"svelte"
-	]
+	],
+	"dependencies": {
+		"@keyv/sqlite": "^4.0.4",
+		"@plebbit/plebbit-js": "github:plebbit/plebbit-js#1c8adf8d2980836edeb7ed74f5131fc910d24f54",
+		"file-type": "^21.0.0"
+	}
 }
