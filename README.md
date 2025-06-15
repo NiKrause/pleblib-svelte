@@ -1,316 +1,235 @@
 # PlebLib Svelte
 
-Eine Svelte-Bibliothek für die Integration mit Plebbit, die es ermöglicht, Posts, Kommentare und Antworten abzurufen und zu veröffentlichen. Diese Bibliothek ist eine Portierung der [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks)-Bibliothek für Svelte.
+A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks) library for Svelte.
+
+Remark: This library was experimentally ported by AI (Claude Sonnet 4.0) but it is not yet ported consistently and is not fully tested. It might be replaced with another version soon, but can serve as a first demo on how to use Plebbit-JS with Svelte! 
+
+A Plebbit node (Plebbit-Cli) is necessary to run the libary at the time of writing. A future version of Plebbit-JS might be able to work in a browser with direct peer-to-per without a Plebbit-Cli.
+
+
 
 ## Installation
+1. Install a plebbit-cli node locally
 
 ```bash
-# Mit npm
+# With npm
 npm install pleblib-svelte
 
-# Mit pnpm
+# With pnpm
 pnpm add pleblib-svelte
 
-# Mit yarn
+# With yarn
 yarn add pleblib-svelte
 ```
 
-## Verwendung
+## Usage
 
-### Initialisierung
+### Initialization
 
-Bevor Sie die Bibliothek verwenden können, müssen Sie Plebbit initialisieren:
+Before using the library, you need to initialize Plebbit:
 
 ```typescript
 import { initPlebbit } from 'pleblib-svelte';
 
-// Initialisiere Plebbit mit Standardoptionen
+// Initialize Plebbit with default options
 await initPlebbit();
 
-// Oder mit benutzerdefinierten Optionen
+// Or with custom options
 await initPlebbit({
-  ipfsHttpClientOptions: { ... },
-  pubsubHttpClientOptions: { ... },
-  dataPath: '/path/to/data',
-  // WebSocket-URL für die Plebbit-Instanz
   plebbitWsEndpoint: 'wss://your-plebbit-websocket-server.com',
-  // Gateway-URLs für IPFS und Pubsub
   ipfsGatewayUrls: [
     'https://cloudflare-ipfs.com',
     'https://ipfs.io'
-  ],
-  pubsubHttpGatewayUrls: [
-    'https://pubsubprovider.xyz/api/v0'
   ]
 });
 ```
 
-### Feeds abrufen
+### Example: Listing Posts from a Subplebbit
 
-Um Posts von Subplebbits abzurufen:
-
-```typescript
-import { loadFeed, posts, feedLoading, feedError } from 'pleblib-svelte';
-
-// Lade Posts von bestimmten Subplebbits
-await loadFeed({
-  subplebbitAddresses: ['news.eth', 'science.eth'],
-  sortType: 'new', // oder 'top'
-  limit: 20
-});
-
-// Verwende die Stores in Svelte-Komponenten
-$: if ($feedLoading) {
-  console.log('Lade Feed...');
-} else if ($feedError) {
-  console.error('Fehler beim Laden des Feeds:', $feedError);
-} else {
-  console.log('Posts geladen:', $posts);
-}
-```
-
-### Kommentare abrufen
-
-Um einen einzelnen Kommentar abzurufen:
-
-```typescript
-import { loadComment, comment, commentLoading, commentError } from 'pleblib-svelte';
-
-// Lade einen Kommentar anhand seiner CID
-await loadComment({
-  commentCid: 'QmYourCommentCid',
-  onlyIfCached: false
-});
-
-// Verwende die Stores in Svelte-Komponenten
-$: if ($commentLoading) {
-  console.log('Lade Kommentar...');
-} else if ($commentError) {
-  console.error('Fehler beim Laden des Kommentars:', $commentError);
-} else if ($comment) {
-  console.log('Kommentar geladen:', $comment);
-}
-```
-
-### Antworten abrufen
-
-Um Antworten auf einen Kommentar abzurufen:
-
-```typescript
-import { loadReplies, replies, repliesLoading, repliesError } from 'pleblib-svelte';
-
-// Lade Antworten auf einen Kommentar
-await loadReplies({
-  comment: myComment,
-  sortType: 'new',
-  limit: 10,
-  flat: false // true, um verschachtelte Antworten abzuflachen
-});
-
-// Verwende die Stores in Svelte-Komponenten
-$: if ($repliesLoading) {
-  console.log('Lade Antworten...');
-} else if ($repliesError) {
-  console.error('Fehler beim Laden der Antworten:', $repliesError);
-} else {
-  console.log('Antworten geladen:', $replies);
-}
-```
-
-### Kommentare veröffentlichen
-
-Um einen Kommentar oder Post zu veröffentlichen:
-
-```typescript
-import { 
-  publishComment, 
-  publishing, 
-  publishingError, 
-  challenge, 
-  answerChallenge 
-} from 'pleblib-svelte';
-
-// Veröffentliche einen Kommentar oder Post
-await publishComment({
-  subplebbitAddress: 'news.eth',
-  title: 'Mein erster Post', // Optional für Posts
-  content: 'Dies ist der Inhalt meines Posts',
-  parentCid: 'QmParentCommentCid' // Optional für Antworten
-});
-
-// Verwende die Stores in Svelte-Komponenten
-$: if ($publishing) {
-  console.log('Veröffentliche Kommentar...');
-} else if ($publishingError) {
-  console.error('Fehler beim Veröffentlichen:', $publishingError);
-} else if ($challenge) {
-  console.log('Challenge erhalten:', $challenge);
-  // Beantworte die Challenge
-  answerChallenge('Deine Antwort auf die Challenge');
-}
-```
-
-### Captcha-Komponente
-
-Die Bibliothek enthält eine Captcha-Komponente, die für die Beantwortung von Challenges verwendet werden kann:
+Here's a complete example of how to list posts from a subplebbit:
 
 ```svelte
-<script>
-  import { Captcha } from 'pleblib-svelte';
-  
-  function handleSuccess() {
-    console.log('Captcha erfolgreich gelöst');
-  }
-  
-  function handleError(error) {
-    console.error('Fehler beim Lösen des Captchas:', error);
-  }
-</script>
-
-<Captcha onSuccess={handleSuccess} onError={handleError} />
-```
-
-## Beispiel
-
-Hier ist ein vollständiges Beispiel für eine Svelte-Komponente, die die Bibliothek verwendet:
-
-```svelte
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
-  import { 
-    initPlebbit, 
-    loadFeed, 
-    posts, 
-    feedLoading, 
-    feedError,
-    publishComment,
-    publishing,
-    challenge,
-    Captcha
-  } from 'pleblib-svelte';
+  import Plebbit from '@plebbit/plebbit-js';
   
+  let plebbit: typeof Plebbit | null = null;
+  let subplebbitAddress = '';
+  let subplebbitInfo = {
+    title: '',
+    description: '',
+    posts: []
+  };
+  let error: Error | null = null;
+  let loading = true;
+
   onMount(async () => {
-    await initPlebbit();
-    await loadFeed({
-      subplebbitAddresses: ['news.eth'],
-      sortType: 'new',
-      limit: 10
-    });
+    try {
+      // Initialize Plebbit
+      plebbit = await Plebbit({
+        plebbitRpcClientsOptions: ['ws://localhost:9138/FslcFRsCGwXPWFfcmKT1TVstn9eyIUoW7knM8O7f']
+      });
+
+      // Get subplebbit instance
+      const subplebbit = await plebbit.getSubplebbit(subplebbitAddress);
+      subplebbit.update();
+
+      // Function to handle subplebbit updates
+      async function handleSubplebbitUpdate() {
+        let allPosts = [];
+        
+        // Get posts from pages.hot.comments if available
+        if (subplebbit.posts.pages?.hot?.comments) {
+          allPosts = [...subplebbit.posts.pages.hot.comments];
+        } else {
+          // Fall back to pageCids
+          const pageCid = subplebbit.posts.pageCids['new'];
+          if (pageCid) {
+            let postsPage = await subplebbit.posts.getPage(pageCid);
+            allPosts = [...postsPage.comments];
+            
+            // Load more pages if needed
+            while (postsPage.nextCid && allPosts.length < 50) {
+              postsPage = await subplebbit.posts.getPage(postsPage.nextCid);
+              allPosts = allPosts.concat(postsPage.comments);
+            }
+          }
+        }
+
+        // Sort posts by timestamp
+        allPosts = allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        
+        subplebbitInfo = {
+          title: subplebbit.title || 'No Title',
+          description: subplebbit.description || 'No Description',
+          posts: allPosts
+        };
+      }
+
+      // Handle updates
+      plebbit.on('update', handleSubplebbitUpdate);
+      subplebbit.on('update', handleSubplebbitUpdate);
+
+      // Initial load
+      await handleSubplebbitUpdate();
+
+    } catch (err) {
+      error = err instanceof Error ? err : new Error(String(err));
+    } finally {
+      loading = false;
+    }
   });
-  
-  async function handlePublish() {
-    await publishComment({
-      subplebbitAddress: 'news.eth',
-      content: 'Dies ist ein Testkommentar'
-    });
-  }
-  
-  function handleCaptchaSuccess() {
-    console.log('Captcha erfolgreich gelöst');
-  }
-  
-  function handleCaptchaError(error) {
-    console.error('Fehler beim Lösen des Captchas:', error);
-  }
 </script>
 
 <main>
-  <h1>Plebbit Demo</h1>
-  
-  <section>
-    <h2>Feed</h2>
-    {#if $feedLoading}
-      <p>Lade Feed...</p>
-    {:else if $feedError}
-      <p class="error">Fehler: {$feedError.message}</p>
-    {:else if $posts.length === 0}
-      <p>Keine Posts gefunden</p>
-    {:else}
-      <ul>
-        {#each $posts as post}
-          <li>
-            <h3>{post.title || 'Kein Titel'}</h3>
-            <p>{post.content || 'Kein Inhalt'}</p>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-  
-  <section>
-    <h2>Kommentar veröffentlichen</h2>
-    <button on:click={handlePublish} disabled={$publishing}>
-      {$publishing ? 'Wird veröffentlicht...' : 'Kommentar veröffentlichen'}
-    </button>
-    
-    {#if $challenge}
-      <div class="captcha-container">
-        <Captcha onSuccess={handleCaptchaSuccess} onError={handleCaptchaError} />
+  <h1>Subplebbit Viewer</h1>
+
+  {#if loading}
+    <p>Loading subplebbit...</p>
+  {:else if error}
+    <p class="error">Error: {error.message}</p>
+  {:else}
+    <section class="subplebbit-info">
+      <h2>{subplebbitInfo.title}</h2>
+      <p>{subplebbitInfo.description}</p>
+      
+      <div class="posts">
+        <h3>Posts</h3>
+        {#if subplebbitInfo.posts.length === 0}
+          <p>No posts found</p>
+        {:else}
+          <ul>
+            {#each subplebbitInfo.posts as post}
+              <li>
+                <h4>{post.title || 'No Title'}</h4>
+                <p>{post.content || 'No Content'}</p>
+                <div class="post-meta">
+                  <span>By: {post.author?.displayName || post.author?.address || 'Unknown'}</span>
+                  {#if post.timestamp}
+                    <span>Posted: {new Date(post.timestamp * 1000).toLocaleString()}</span>
+                  {/if}
+                </div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
-    {/if}
-  </section>
+    </section>
+  {/if}
 </main>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .subplebbit-info {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .posts ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .posts li {
+    background-color: white;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 10px;
+  }
+
+  .error {
+    color: red;
+    padding: 10px;
+    border: 1px solid red;
+    border-radius: 4px;
+    background-color: #fff5f5;
+  }
+</style>
 ```
 
-## Entwicklung
+### Publishing Comments
 
-Um an der Bibliothek zu arbeiten:
-
-```bash
-# Klone das Repository
-git clone https://github.com/yourusername/pleblib-svelte.git
-cd pleblib-svelte
-
-# Installiere Abhängigkeiten
-pnpm install
-
-# Starte den Entwicklungsserver
-pnpm run dev
-```
-
-## Tests
-
-Die Bibliothek enthält Tests für alle Komponenten und Stores:
-
-```bash
-# Führe alle Tests aus
-pnpm test
-
-# Führe nur Unit-Tests aus
-pnpm test:unit
-
-# Führe nur E2E-Tests aus
-pnpm test:e2e
-```
-
-## Konfiguration
-
-### WebSocket-URL und Gateway-URLs
-
-Sie können die WebSocket-URL für die Plebbit-Instanz und andere Gateway-URLs in den Plebbit-Optionen konfigurieren:
+To publish a comment or post:
 
 ```typescript
-await initPlebbit({
-  // WebSocket-URL für die Plebbit-Instanz
-  plebbitWsEndpoint: 'wss://your-plebbit-websocket-server.com',
-  
-  // Gateway-URLs für IPFS
-  ipfsGatewayUrls: [
-    'https://cloudflare-ipfs.com',
-    'https://ipfs.io'
-  ],
-  
-  // Gateway-URLs für Pubsub
-  pubsubHttpGatewayUrls: [
-    'https://pubsubprovider.xyz/api/v0'
-  ]
+import { publishComment } from 'pleblib-svelte';
+
+await publishComment({
+  subplebbitAddress: 'news.eth',
+  title: 'My First Post', // Optional for posts
+  content: 'This is the content of my post',
+  parentCid: 'QmParentCommentCid' // Optional for replies
 });
 ```
 
-Die WebSocket-URL (`plebbitWsEndpoint`) ermöglicht eine direkte Verbindung zu einem Plebbit-WebSocket-Server, was die Leistung und Zuverlässigkeit verbessern kann. Wenn Sie Ihren eigenen Plebbit-Server betreiben, können Sie hier die URL Ihres Servers angeben.
+## Development
 
-Die Gateway-URLs (`ipfsGatewayUrls` und `pubsubHttpGatewayUrls`) ermöglichen die Kommunikation mit IPFS und Pubsub über HTTP-Gateways, was in Umgebungen nützlich sein kann, in denen direkte P2P-Verbindungen nicht möglich sind.
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/pleblib-svelte.git
+cd pleblib-svelte
 
-## Lizenz
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm run dev
+```
+
+## License
 
 MIT

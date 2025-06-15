@@ -22,6 +22,7 @@
     usePublishSubplebbitEdit,
     getPlebbit
   } from '../lib/index.js';
+  import type { Subplebbit } from '../lib/types/index.js';
   
   // Variablen für die Subplebbit-Bearbeitung
   let subplebbitTitle = '';
@@ -43,11 +44,21 @@
   let accountError: Error | null = null;
   
   // Add new variables for subplebbit management
-  // let subplebbitAddress = '12D3KooWCRKoTxC4t9H1KG5m7AXf5VQKVozcxrstWc24NdxcGtYu'; // Default address
   let subplebbitAddress = '12D3KooWJzx833wsWBQxiRXsAhhWQnzrGKTPguaBY56JyCYrNum9';
   let savedSubplebbits: string[] = [];
   let creatingSubplebbit = false;
   let createSubplebbitError: Error | null = null;
+
+  // Add these variables at the top with other variables
+  let commentTitle = '';
+  let commentContent = '';
+  
+  // Subscribe to comment updates
+  if ($comment) {
+    // The comment store will automatically update when the comment changes
+    // thanks to the on('update') handler we added in comment.ts
+    console.log('Subscribed to comment updates for:', $comment.cid);
+  }
   
   // Initialisiere Plebbit beim Laden der Seite
   onMount(async () => {
@@ -58,11 +69,26 @@
         savedSubplebbits = JSON.parse(saved);
       }
       
+      // Load last selected subplebbit
+      const lastSelected = localStorage.getItem('lastSelectedSubplebbit');
+      if (lastSelected) {
+        subplebbitAddress = lastSelected;
+      } else if (savedSubplebbits.length > 0) {
+        // If no last selected but we have saved subplebbits, use the first one
+        subplebbitAddress = savedSubplebbits[0];
+      }
+      
       await initPlebbit({plebbitRpcClientsOptions: ['ws://localhost:9138/FslcFRsCGwXPWFfcmKT1TVstn9eyIUoW7knM8O7f']});
       console.log('Plebbit initialisiert');
       
       // Get subplebbit info using the current address
-      await loadSubplebbitInfo();
+      const subplebbit = await loadSubplebbitInfo();
+      if (subplebbit) {
+        console.log('Subplebbit:', subplebbit);
+        subplebbit.on('update', (post) => {
+          console.log('Post:', post);
+        });
+      }
       
       // Load accounts
       await loadAccounts();
@@ -94,6 +120,8 @@
   async function handleLoadComment(commentCid: string) {
     try {
       await loadComment({ commentCid });
+      
+
     } catch (error) {
       console.error('Fehler beim Laden des Kommentars:', error);
     }
@@ -115,9 +143,12 @@
     try {
       await publishComment({
         subplebbitAddress: subplebbitAddress,
-        content: 'Dies ist ein Testkommentar',
-        title: 'Test'
+        content: commentContent,
+        title: commentTitle
       });
+      // Clear the form after successful publishing
+      commentTitle = '';
+      commentContent = '';
     } catch (error) {
       console.error('Fehler beim Veröffentlichen des Kommentars:', error);
     }
@@ -231,7 +262,7 @@
   async function loadSubplebbitInfo() {
     try {
       const plebbit = await getPlebbit();
-      const subplebbit = await plebbit.getSubplebbit(subplebbitAddress);
+      const subplebbit = await plebbit.getSubplebbit(subplebbitAddress) as Subplebbit;
       subplebbitInfo = {
         title: subplebbit.title || 'No Title',
         description: subplebbit.description || 'No Description'
@@ -239,6 +270,7 @@
       // Update the form fields with current values
       subplebbitTitle = subplebbit.title || '';
       subplebbitDescription = subplebbit.description || '';
+      return subplebbit;
     } catch (error) {
       console.error('Error loading subplebbit info:', error);
     }
@@ -247,6 +279,9 @@
   // Function to handle subplebbit address change
   async function handleSubplebbitAddressChange() {
     try {
+      // Save the selected subplebbit address to localStorage
+      localStorage.setItem('lastSelectedSubplebbit', subplebbitAddress);
+      
       await loadSubplebbitInfo();
       await loadFeed({
         subplebbitAddresses: [subplebbitAddress],
@@ -398,6 +433,16 @@
         <p>
           Von: {$comment.author?.displayName || $comment.author?.address || 'Unbekannt'}
         </p>
+        {#if $comment.timestamp}
+          <p class="comment-timestamp">
+            Erstellt: {new Date($comment.timestamp * 1000).toLocaleString()}
+          </p>
+        {/if}
+        {#if $comment.updated}
+          <p class="comment-updated">
+            Aktualisiert: {new Date($comment.updated * 1000).toLocaleString()}
+          </p>
+        {/if}
         <button on:click={handleLoadReplies}>Antworten laden</button>
       </div>
     {:else}
@@ -429,9 +474,35 @@
 
   <section>
     <h2>Kommentar veröffentlichen</h2>
-    <button on:click={handlePublishComment} disabled={$publishing}>
-      {$publishing ? 'Wird veröffentlicht...' : 'Kommentar veröffentlichen'}
-    </button>
+    <form on:submit|preventDefault={handlePublishComment}>
+      <div class="form-group">
+        <label for="comment-title">Titel:</label>
+        <input
+          type="text"
+          id="comment-title"
+          bind:value={commentTitle}
+          placeholder="Titel eingeben"
+          class="form-control"
+          required
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="comment-content">Inhalt:</label>
+        <textarea
+          id="comment-content"
+          bind:value={commentContent}
+          placeholder="Inhalt eingeben"
+          class="form-control"
+          rows="4"
+          required
+        ></textarea>
+      </div>
+      
+      <button type="submit" disabled={$publishing}>
+        {$publishing ? 'Wird veröffentlicht...' : 'Kommentar veröffentlichen'}
+      </button>
+    </form>
     
     {#if $publishingError}
       <p class="error">Fehler: {$publishingError.message}</p>
@@ -715,5 +786,15 @@
   select.form-control option {
     padding: 8px;
     font-family: monospace;
+  }
+  
+  .comment-timestamp, .comment-updated {
+    font-size: 0.8em;
+    color: #666;
+    margin: 5px 0;
+  }
+  
+  .comment-updated {
+    color: #4CAF50;
   }
 </style>

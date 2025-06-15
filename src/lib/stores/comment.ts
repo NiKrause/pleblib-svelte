@@ -70,7 +70,17 @@ export async function loadComment(options?: Partial<CommentOptions>): Promise<vo
     const plebbit = await getPlebbit();
 
     // Hole den Kommentar
-    const comment = await plebbit.getComment(currentOptions.commentCid);
+    const comment = await plebbit.getComment(currentOptions.commentCid) as Comment & {
+      on(event: 'update', callback: (comment: Comment) => void): void;
+    };
+
+    // Setze den Update-Event-Listener
+    comment.on('update', (updatedComment: Comment) => {
+      commentStore.update((state) => ({
+        ...state,
+        comment: updatedComment
+      }));
+    });
 
     // Aktualisiere den Store mit dem geladenen Kommentar
     commentStore.update((state) => ({
