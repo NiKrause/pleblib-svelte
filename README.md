@@ -1,6 +1,6 @@
 # PlebLib Svelte
 
-A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks) library for Svelte.
+A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks).
 
 Remark: This library was experimentally ported by AI (Claude Sonnet 4.0) but it is not yet ported consistently and is not fully tested. It might be replaced with another version soon, but can serve as a first demo on how to use Plebbit-JS with Svelte! 
 
@@ -66,8 +66,9 @@ Here's a complete example of how to list posts from a subplebbit:
   onMount(async () => {
     try {
       // Initialize Plebbit
+      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS;
       plebbit = await Plebbit({
-        plebbitRpcClientsOptions: ['ws://localhost:9138/FslcFRsCGwXPWFfcmKT1TVstn9eyIUoW7knM8O7f']
+        plebbitRpcClientsOptions: [plebbitRpcClientsOptions]
       });
 
       // Get subplebbit instance

@@ -78,7 +78,9 @@
         subplebbitAddress = savedSubplebbits[0];
       }
       
-      await initPlebbit({plebbitRpcClientsOptions: ['ws://localhost:9138/FslcFRsCGwXPWFfcmKT1TVstn9eyIUoW7knM8O7f']});
+      // Initialize Plebbit
+      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS;
+      await initPlebbit({plebbitRpcClientsOptions: [plebbitRpcClientsOptions]});
       console.log('Plebbit initialisiert');
       
       // Get subplebbit info using the current address
