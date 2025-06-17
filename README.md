@@ -1,6 +1,6 @@
 # PlebLib Svelte
 
-A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks) leveraging [plebbit-js](https://github.com/plebbit/plebbit-js)
+A Svelte library for integrating with Plebbit, enabling you to create subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks) leveraging [plebbit-js](https://github.com/plebbit/plebbit-js)
 
 Remark: This library was experimentally ported by RooCode AI (Claude Sonnet 4.0). Unfortunately, it is not yet ported completely and consistently. It is not fully tested, but can serve as an experimental package to evaluate Plebbit-JS for decentralized social blogging and other social media formats. 
 
