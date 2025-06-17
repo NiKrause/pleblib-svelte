@@ -7,7 +7,7 @@ Remark: This library was experimentally ported by RooCode AI (Claude Sonnet 4.0)
 It might be replaced with better version at some point. It can serve as a first demo on how to use Plebbit-JS within Svelte! 
 
 At the time of writing, a plebbit node (Plebbit-Cli) is necessary for plebbit-js to connect via websocket. 
-Current version of plebbit-js might work in a local-first way with integrated [Helia (IPFS node)](https://github.com/ipfs/helia) running in the browser.
+Current version of plebbit-js might work in a local-first way with integrated [Helia (IPFS node)](https://github.com/ipfs/helia) running in the browser. This is still untested! 
 
 ## Installation
 1. Create a new Svelte project and install a pleblib-svelte package
