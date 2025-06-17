@@ -24,12 +24,12 @@
           return;
         }
   
-        // Initialize Plebbit
-        const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS;
-        plebbit = await Plebbit({
-          plebbitRpcClientsOptions: [plebbitRpcClientsOptions]
-        });
-        
+        const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS
+        .split(',')
+        .map((option: string) => option.trim())
+        .filter((option: string) => option.length > 0);
+
+        plebbit = await Plebbit({plebbitRpcClientsOptions});
         // Get subplebbit instance
         const subplebbit = await plebbit.getSubplebbit(subplebbitAddress);  
         subplebbit.update()

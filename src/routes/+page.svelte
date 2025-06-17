@@ -44,7 +44,7 @@
   let accountError: Error | null = null;
   
   // Add new variables for subplebbit management
-  let subplebbitAddress = '12D3KooWJzx833wsWBQxiRXsAhhWQnzrGKTPguaBY56JyCYrNum9';
+  let subplebbitAddress = import.meta.env.VITE_DEFAULT_SUBPLEBBIT_ADDRESS || '12D3KooWJzx833wsWBQxiRXsAhhWQnzrGKTPguaBY56JyCYrNum9';
   let savedSubplebbits: string[] = [];
   let creatingSubplebbit = false;
   let createSubplebbitError: Error | null = null;
@@ -77,10 +77,13 @@
         // If no last selected but we have saved subplebbits, use the first one
         subplebbitAddress = savedSubplebbits[0];
       }
-      
+      console.log('Plebbit RPC Clients Options:', import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS);
       // Initialize Plebbit
-      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS;
-      await initPlebbit({plebbitRpcClientsOptions: [plebbitRpcClientsOptions]});
+      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS
+        .split(',')
+        .map((option: string) => option.trim())
+        .filter((option: string) => option.length > 0);
+      await initPlebbit({plebbitRpcClientsOptions});
       console.log('Plebbit initialisiert');
       
       // Get subplebbit info using the current address

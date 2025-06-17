@@ -1,15 +1,16 @@
 # PlebLib Svelte
 
-A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks).
+A Svelte library for integrating with Plebbit, enabling you to create & subplebbits, fetch and publish posts, comments, and replies and solves default Captchas. This library is an experimental port of the [plebbit-react-hooks](https://github.com/plebbit/plebbit-react-hooks) leveraging [plebbit-js](https://github.com/plebbit/plebbit-js)
 
-Remark: This library was experimentally ported by AI (Claude Sonnet 4.0) but it is not yet ported consistently and is not fully tested. It might be replaced with another version soon, but can serve as a first demo on how to use Plebbit-JS with Svelte! 
+Remark: This library was experimentally ported by RooCode AI (Claude Sonnet 4.0). Unfortunately, it is not yet ported completely and consistently. It is not fully tested, but can serve as an experimental package to evaluate Plebbit-JS for decentralized social blogging and other social media formats. 
 
-A Plebbit node (Plebbit-Cli) is necessary to run the libary at the time of writing. A future version of Plebbit-JS might be able to work in a browser with direct peer-to-per without a Plebbit-Cli.
+It might be replaced with better version at some point. It can serve as a first demo on how to use Plebbit-JS within Svelte! 
 
-
+At the time of writing, a plebbit node (Plebbit-Cli) is necessary for plebbit-js to connect via websocket. 
+Current version of plebbit-js might work in a local-first way with integrated [Helia (IPFS node)](https://github.com/ipfs/helia) running in the browser.
 
 ## Installation
-1. Install a plebbit-cli node locally
+1. Create a new Svelte project and install a pleblib-svelte package
 
 ```bash
 # With npm
@@ -20,6 +21,50 @@ pnpm add pleblib-svelte
 
 # With yarn
 yarn add pleblib-svelte
+```
+
+2. Run plebbit-cli using Docker Compose
+
+```bash
+# Start the plebbit-cli node
+docker-compose up -d
+
+# The node will be available at ws://localhost:9138
+```
+
+3. Run the development server with
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { initPlebbit } from 'pleblib`svelte';
+  
+  let status = 'Initializing...';
+  
+  onMount(async () => {
+    try {
+      await initPlebbit({
+        plebbitWsEndpoint: 'ws://localhost:9138/auth-key-of-plebbit-cli'
+      });
+      status = 'Connected to Plebbit!';
+    } catch (error) {
+      status = `Error: ${error.message}`;
+    }
+  });
+</script>
+
+<main>
+  <h1>Plebbit Demo</h1>
+  <p>{status}</p>
+</main>
+
+<style>
+  main {
+    text-align: center;
+    padding: 1em;
+    max-width: 240px;
+    margin: 0 auto;
+  }
+</style>
 ```
 
 ## Usage
@@ -66,9 +111,13 @@ Here's a complete example of how to list posts from a subplebbit:
   onMount(async () => {
     try {
       // Initialize Plebbit
-      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS;
+      const plebbitRpcClientsOptions = import.meta.env.VITE_PLEBBIT_RPC_CLIENTS_OPTIONS
+        .split(',')
+        .map(option => option.trim())
+        .filter(option => option.length > 0);
+
       plebbit = await Plebbit({
-        plebbitRpcClientsOptions: [plebbitRpcClientsOptions]
+        plebbitRpcClientsOptions
       });
 
       // Get subplebbit instance
