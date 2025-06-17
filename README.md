@@ -13,30 +13,20 @@ Current version of plebbit-js might work in a local-first way with integrated [H
 1. Create a new Svelte project and install a pleblib-svelte package
 
 ```bash
-# With npm
 npm install pleblib-svelte
-
-# With pnpm
-pnpm add pleblib-svelte
-
-# With yarn
-yarn add pleblib-svelte
 ```
 
-2. Run plebbit-cli using Docker Compose
+2. Run plebbit-cli using Docker Compose which will be available at ws://localhost:9138 and get the auth-key from ./data/plebbit directory
 
 ```bash
-# Start the plebbit-cli node
-docker-compose up -d
-
-# The node will be available at ws://localhost:9138
+docker-compose up -d 
 ```
-
-3. Run the development server with
+3. Rename .env.example to .env
+4. Run the development server with
 ```svelte
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { initPlebbit } from 'pleblib`svelte';
+  import { initPlebbit } from 'pleblib-svelte';
   
   let status = 'Initializing...';
   
