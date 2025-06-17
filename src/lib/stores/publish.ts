@@ -7,7 +7,7 @@ import type {
 } from '../types/index.js';
 import { getPlebbit } from '../utils/plebbit.js';
 
-// Store für Publish-Optionen
+// Store for publish options
 export const publishOptionsStore = writable<PublishCommentOptions>({
   subplebbitAddress: '',
   title: '',
@@ -16,7 +16,7 @@ export const publishOptionsStore = writable<PublishCommentOptions>({
   signer: undefined
 });
 
-// Store für Publish-Status
+// Store for publish status
 export const publishStore = writable<PublishCommentState>({
   publishing: false,
   publishingError: null,
@@ -25,7 +25,7 @@ export const publishStore = writable<PublishCommentState>({
   comment: null
 });
 
-// Abgeleitete Stores
+// Derived stores
 export const publishing = derived(
   [publishStore],
   ([$publishStore]) => $publishStore.publishing
@@ -62,9 +62,9 @@ interface StoredComment extends PublishableComment {
 }
 
 /**
- * Veröffentlicht einen Kommentar oder Post basierend auf den angegebenen Optionen
- * @param options - Optionen für die Veröffentlichung
- * @param challengeAnswer - Antwort auf die Challenge (optional)
+ * Publishes a comment or post based on the specified options
+ * @param options - Options for publishing
+ * @param challengeAnswer - Answer to the challenge (optional)
  */
 export async function publishComment(
   options?: Partial<PublishCommentOptions>,
@@ -79,28 +79,28 @@ export async function publishComment(
       }));
     }
 
-    // Setze den Publishing-Status
+    // Set the publishing status
     publishStore.update((state) => ({
       ...state,
       publishing: true,
       publishingError: null
     }));
 
-    // Hole die aktuellen Publish-Optionen
+    // Get current publish options
     const currentOptions = get(publishOptionsStore);
     console.log("currentOptions after store update:", currentOptions)
 
-    // Überprüfe, ob eine Subplebbit-Adresse angegeben ist
+    // Check if a subplebbit address is provided
     if (!currentOptions.subplebbitAddress) {
-      throw new Error('Keine Subplebbit-Adresse angegeben');
+      throw new Error('No subplebbit address provided');
     }
 
-    // Überprüfe, ob Inhalt vorhanden ist
+    // Check if content exists
     if (!currentOptions.content && !currentOptions.title) {
-      throw new Error('Weder Titel noch Inhalt angegeben');
+      throw new Error('Neither title nor content provided');
     }
 
-    // Hole die Plebbit-Instanz
+    // Get the Plebbit instance
     const plebbit = await getPlebbit();
     console.log("plebbit instance:", plebbit)
     console.log("currentOptions before comment creation:", currentOptions)
@@ -110,7 +110,7 @@ export async function publishComment(
     const defaultAccount = accounts[0];
     console.log('Using default account:', defaultAccount);
 
-    // Erstelle den Kommentar
+    // Create the comment
     const signer = await plebbit.createSigner();
     const getRandomString = () => (Math.random() + 1).toString(36).replace('.', '');
     const comment = await plebbit.createComment({
@@ -181,7 +181,7 @@ export async function publishComment(
       }
     });
 
-    // Wenn eine Challenge-Antwort angegeben ist, beantworte die Challenge
+    // If a challenge answer is provided, answer the challenge
     if (challengeAnswer) {
       console.log("Using provided challenge answer:", challengeAnswer);
       const currentState = get(publishStore);
@@ -192,7 +192,7 @@ export async function publishComment(
         console.log("No challenge found in current state");
       }
     } else {
-      // Starte die Veröffentlichung
+      // Start the publication
       console.log("Starting comment publication...");
       await comment.publish();
       console.log("Comment published successfully");
@@ -205,7 +205,7 @@ export async function publishComment(
     }));
   } catch (err) {
     console.error("Error in publishComment:", err);
-    // Setze den Fehlerstatus
+    // Set the error status
     publishStore.update((state) => ({
       ...state,
       publishing: false,
@@ -215,8 +215,8 @@ export async function publishComment(
 }
 
 /**
- * Beantwortet eine Challenge für einen Kommentar
- * @param answer - Antwort auf die Challenge
+ * Answers a challenge for a comment
+ * @param answer - Answer to the challenge
  */
 export async function answerChallenge(answer: string): Promise<void> {
   const currentState = get(publishStore);
@@ -225,11 +225,11 @@ export async function answerChallenge(answer: string): Promise<void> {
   console.log("Comment object:", currentState.comment);
   
   if (!currentState.comment) {
-    throw new Error('Kein Kommentar zum Beantworten der Challenge vorhanden');
+    throw new Error('No comment available to answer the challenge');
   }
   
   if (!currentState.challenge) {
-    throw new Error('Keine Challenge zum Beantworten vorhanden');
+    throw new Error('No challenge available to answer');
   }
 
   try {
@@ -254,8 +254,8 @@ export async function answerChallenge(answer: string): Promise<void> {
 }
 
 /**
- * Setzt die Publish-Optionen
- * @param options - Neue Publish-Optionen
+ * Sets the publish options
+ * @param options - New publish options
  */
 export function setPublishOptions(options: Partial<PublishCommentOptions>): void {
   publishOptionsStore.update((currentOptions) => ({
@@ -265,7 +265,7 @@ export function setPublishOptions(options: Partial<PublishCommentOptions>): void
 }
 
 /**
- * Setzt den Publish-Store zurück
+ * Resets the publish store
  */
 export function resetPublish(): void {
   publishStore.set({

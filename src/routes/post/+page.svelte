@@ -132,35 +132,43 @@
 
     // Function to handle post submission
     async function handleSubmitPost() {
-      if (!plebbit || !subplebbitAddress) return;
+      if (!plebbit || !subplebbitAddress) {
+        console.log('Cannot submit post: plebbit or subplebbitAddress is missing');
+        return;
+      }
       
       try {
+        console.log('Starting post submission process...');
         publishing = true;
         publishingError = null;
 
-        // Get the subplebbit instance
-        // const subplebbit = await plebbit.getSubplebbit(subplebbitAddress);
-        
-        // Create a signer
+        console.log('Creating signer...');
         const signer = await plebbit.createSigner();
+        console.log('Signer created:', signer);
         
-        // Create the post
+        console.log('Creating post with data:', {
+          subplebbitAddress,
+          title: postTitle,
+          content: postContent
+        });
+        
         const post = await plebbit.createComment({
           signer,
           subplebbitAddress,
           title: postTitle,
           content: postContent
         });
-        console.log('Post:', post);
+        console.log('Post created:', post);
 
-        // Handle any challenges
         if (post.challenge) {
+          console.log('Challenge received:', post.challenge);
           currentChallenge = post.challenge;
-          return; // Wait for captcha to be solved
+          return;
         }
 
-        // If no challenge, publish the post
+        console.log('No challenge received, publishing post...');
         await post.publish();
+        console.log('Post published successfully');
         
         // Clear the form
         postTitle = '';
@@ -177,22 +185,35 @@
 
     // Function to handle captcha success
     async function handleCaptchaSuccess() {
-      if (!plebbit || !subplebbitAddress) return;
+      console.log('Captcha solved successfully, proceeding with post creation...');
+      
+      if (!plebbit || !subplebbitAddress) {
+        console.log('Cannot proceed: plebbit or subplebbitAddress is missing');
+        return;
+      }
       
       try {
         publishing = true;
         publishingError = null;
 
-        // Get the subplebbit instance
+        console.log('Getting subplebbit instance...');
         const subplebbit = await plebbit.getSubplebbit(subplebbitAddress);
+        console.log('Subplebbit instance obtained');
         
-        // Create and publish the post
-        const post = await subplebbit.createComment({
+        console.log('Creating post with data:', {
           title: postTitle,
           content: postContent
         });
         
+        const post = await subplebbit.createComment({
+          title: postTitle,
+          content: postContent
+        });
+        console.log('Post created:', post);
+        
+        console.log('Publishing post...');
         await post.publish();
+        console.log('Post published successfully');
         
         // Clear the form
         postTitle = '';
@@ -209,6 +230,7 @@
 
     // Function to handle captcha error
     function handleCaptchaError(error: Error) {
+      console.error('Captcha error occurred:', error);
       publishingError = error;
       currentChallenge = null;
     }
